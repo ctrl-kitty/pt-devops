@@ -23,6 +23,7 @@ def create_db_connection():
     username = os.getenv('DB_USER')
     password = os.getenv('DB_PASSWORD')
     db_name = os.getenv('DB_DATABASE')
+    print(username, password)
     connection = psycopg2.connect(user=username,
                                   password=password,
                                   host=host,
