@@ -31,8 +31,6 @@ def create_db_connection():
     return connection
 
 
-dotenv_path = Path('../.env')
-load_dotenv(dotenv_path=dotenv_path)
 
 logger = logging.getLogger(__name__)
 db_connection = create_db_connection()
