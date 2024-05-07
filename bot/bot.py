@@ -74,9 +74,6 @@ async def connect_and_execute(cmd: str) -> str:
         logger.info("SSH connection established")
 
     stdin, stdout, stderr = client.exec_command(cmd)
-    if stderr.read():
-        logger.error("Got exception while executing command: %s. Exception: %s", cmd, stderr.read())
-        return "Execution error"
     data = stdout.read() + stderr.read()
     client.close()
     data = str(data).replace('\\n', '\n').replace('\\t', '\t')[2:-1]
@@ -281,9 +278,9 @@ async def get_services(message: Message):
 
 @postgres_router.message(Command("get_repl_logs"))
 async def get_repl_logs(message: Message):
-    data = await connect_and_execute("cat /var/log/postgresql/postgresql-15-main.log")
-    out = await find_only_repl_log(data)
-    await message.answer(out)
+    data = await connect_and_execute("cat /var/log/postgres/postgres.log")
+    #out = await find_only_repl_log(data)
+    await message.answer("\n".join(data.split("\n")[-10:]))
 
 
 @postgres_router.message(Command("get_emails"))

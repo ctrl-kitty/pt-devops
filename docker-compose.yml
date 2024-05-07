@@ -7,6 +7,7 @@ services:
       - TOKEN=${TOKEN}
       - BOT_TOKEN=${TOKEN}
       - RM_HOST=${RM_HOST}
+      - RM_USER=${RM_USER}
       - RM_PORT=${RM_PORT}
       - RM_PASSWORD=${RM_PASSWORD}
       - DB_HOST=${DB_HOST}
@@ -18,8 +19,39 @@ services:
       - db
 
   db:
-    build: ./db
+    build:
+      context: ./db
+      args:
+        - RM_PORT=${RM_PORT}
+        - RM_USER=${RM_USER}
+        - RM_PASSWORD=${RM_PASSWORD}
+        - DB_USER=${DB_USER}
     environment:
-      - POSTGRES_USER=${DB_USER}
-      - POSTGRES_DB=${DB_DATABASE}
-      - POSTGRES_PASSWORD=${DB_PASSWORD}
+      - POSTGRESQL_PORT_NUMBER=${DB_PORT}
+      - POSTGRESQL_REPLICATION_MODE=master
+      - POSTGRESQL_USERNAME=${DB_USER}
+      - POSTGRESQL_DATABASE=${DB_DATABASE}
+      - POSTGRESQL_PASSWORD=${DB_PASSWORD}
+      - POSTGRESQL_LOG_HOSTNAME=yes
+      - POSTGRESQL_LOG_CONNECTIONS=yes
+      - POSTGRESQL_POSTGRES_PASSWORD=postgres
+      - POSTGRESQL_REPLICATION_USER=${DB_REPL_USER}
+      - POSTGRESQL_REPLICATION_PASSWORD=${DB_REPL_PASSWORD}
+      - POSTGRESQL_EXTRA_FLAGS=-c log_file_mode=0640 -c log_filename=postgres.log -c wal_log_hints=on -c logging_collector=on -c log_directory=/var/log/postgres/ -c archive_mode=on
+    ports:
+      - 78:${RM_PORT}
+      - 5432:${DB_PORT}
+  db_repl:
+    build: ./db_repl
+    environment:
+      - POSTGRESQL_POSTGRES_PASSWORD=postgres
+      - POSTGRESQL_MASTER_HOST=${DB_HOST}
+      - POSTGRESQL_PORT_NUMBER=${DB_PORT}
+      - POSTGRESQL_REPLICATION_MODE=slave
+      - POSTGRESQL_USERNAME=${DB_REPL_USER}
+      - POSTGRESQL_PASSWORD=${DB_REPL-PASSWORD}
+      - POSTGRESQL_REPLICATION_USER=${DB_REPL_USER}
+      - POSTGRESQL_REPLICATION_PASSWORD=${DB_REPL_PASSWORD}
+      - POSTGRESQL_MASTER_PORT_NUMBER=${DB_PORT}
+    depends_on:
+      - db
