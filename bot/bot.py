@@ -14,7 +14,7 @@ from aiogram.client.default import DefaultBotProperties
 from aiogram.enums import ParseMode
 from aiogram.filters import CommandStart, Command, CommandObject
 from aiogram.types import Message
-
+import time
 
 def create_db_connection():
     logger.info("Creating database connection")
@@ -34,7 +34,14 @@ def create_db_connection():
 
 
 logger = logging.getLogger(__name__)
-db_connection = create_db_connection()
+while 1:
+    try:
+        db_connection = create_db_connection()
+    except:
+        logger.debug('Db offline')
+        time.sleep(5)
+        continue
+    break
 TOKEN = os.getenv('TOKEN')
 chat_id = os.getenv('CHAT_ID')
 
@@ -279,8 +286,8 @@ async def get_services(message: Message):
 @postgres_router.message(Command("get_repl_logs"))
 async def get_repl_logs(message: Message):
     data = await connect_and_execute("cat /var/log/postgres/postgres.log")
-    #out = await find_only_repl_log(data)
-    await message.answer("\n".join(data.split("\n")[-10:]))
+    out = await find_only_repl_log(data)
+    await message.answer(out)
 
 
 @postgres_router.message(Command("get_emails"))

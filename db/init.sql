@@ -13,3 +13,5 @@ ALTER SYSTEM SET log_replication_commands = 'on';
 ALTER SYSTEM SET archive_command = 'cp %p /oracle/pg_data/archive/%f';
 select pg_reload_conf();
 select pg_switch_wal();
+CREATE ROLE db_repl_user WITH REPLICATION LOGIN PASSWORD 'db_repl_password';
+SELECT pg_create_physical_replication_slot('replication_slot');
