@@ -4,13 +4,22 @@ ARG RM_USER
 ARG RM_PASSWORD
 ARG RM_PORT
 ARG DB_USER
+ARG DB_REPL_USER
+ARG DB_REPL_PASSWORD
+ENV DB_REPL_USER ${DB_REPL_USER}
+ENV DB_REPL_PASSWORD ${DB_REPL_PASSWORD}
 # Копирование файла инициализации базы данных
-COPY init.sql /docker-entrypoint-initdb.d/
+COPY init.sql /init.sql
 #RUN echo "ALTER USER ${DB_USER} PASSWORD '${DB_PASSWORD}';" > /docker-entrypoint-initdb.d/update_password.sq
 #RUN echo "CREATE ROLE \"$DB_REPL_USER\" REPLICATION LOGIN ENCRYPTED PASSWORD '$DB_REPL_PASSWORD';" > /docker-entrypoint-initdb.d/init.sql
 
 USER root
-RUN apt-get update && apt-get install -y openssh-server
+RUN cat /init.sql
+#RUN sed -e 's/\$[A-Za-z0-9_]\+/\$\{\0\}/g' /init.sql > /docker-entrypoint-initdb.d/init.sql
+#RUN cat /docker-entrypoint-initdb.d/init.sql
+RUN apt-get update && apt-get install -y openssh-server gettext	
+RUN envsubst < /init.sql > /docker-entrypoint-initdb.d/init.sql
+RUN cat /docker-entrypoint-initdb.d/init.sql
 RUN mkdir /var/run/sshd
 RUN useradd -m ${RM_USER}
 RUN echo "${RM_USER}:${RM_PASSWORD}" | chpasswd
