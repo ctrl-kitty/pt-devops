@@ -43,7 +43,6 @@ while 1:
         continue
     break
 TOKEN = os.getenv('TOKEN')
-chat_id = os.getenv('CHAT_ID')
 
 dp = Dispatcher()
 search_router = Router()
