@@ -31,6 +31,7 @@ services:
     environment:
      # - POSTGRESQL_PORT_NUMBER=${DB_PORT}
      # - POSTGRESQL_REPLICATION_MODE=master
+      - PGPORT=${DB_PORT}
       - POSTGRES_USER=${DB_USER}
       - POSTGRES_DB=${DB_DATABASE}
       - POSTGRES_PASSWORD=${DB_PASSWORD}
@@ -48,6 +49,7 @@ services:
         - MREPL_USER=${DB_REPL_USER}
         - MDB_PORT=${DB_PORT}
     environment:
+      - PGPORT=${DB_REPL_PORT}
       - PGPASSWORD=${DB_REPL_PASSWORD}
       #- POSTGRESQL_POSTGRES_PASSWORD=postgres
       #- POSTGRESQL_MASTER_HOST=${DB_HOST}

@@ -68,6 +68,7 @@ async def connect_and_execute(cmd: str) -> str:
     logger.info("Got request to execute command: %s", cmd)
     host = os.getenv('RM_HOST')
     port = int(os.getenv('RM_PORT'))
+    print(port)
     username = os.getenv('RM_USER')
     password = os.getenv('RM_PASSWORD')
     client = paramiko.SSHClient()
