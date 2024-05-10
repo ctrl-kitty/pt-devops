@@ -1,0 +1,28 @@
+db_user: suser
+db_password: suser
+db_name: tg_data
+db_repl_user: db_repl_user
+db_repl_password: db_repl_password
+postgresql_global_config_options:
+  - option: wal_level
+    value: 'replica'
+  - option: archive_mode
+    value: 'on'
+  - option: max_replication_slots
+    value: '10'
+  - option: max_wal_senders
+    value: '10'
+  - option: archive_command
+    value: 'cp %p /oracle/pg_data/archive/%f'
+  - option: log_replication_commands
+    value: 'on'
+  - option: log_file_mode
+    value: '0640'
+  - option: log_filename
+    value: 'postgres.log'
+  - option: wal_log_hints
+    value: 'on'
+  - option: logging_collector
+    value: 'on'
+  - option: log_directory
+    value: '/var/log/postgresql/'
