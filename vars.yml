@@ -1,8 +1,21 @@
-db_user: suser
+# postgres-paths
+postgres_version: 14
+postgres_data_path: /var/lib/postgresql/{{ postgres_version }}/data
+postgres_bin_path: /usr/lib/postgresql/{{ postgres_version }}/bin
+postgres_conf_path: /etc/postgresql/{{ postgres_version }}/main
+postgres_archive_path: /oracle/pg_data/archive
+postgres_log_path: /var/log/postgresql
+postgres_log_file: postgres.log
+
+# postgres-creds
+db_master_host: 192.168.194.133
+db_mater_user: suser
 db_password: suser
 db_name: tg_data
 db_repl_user: db_repl_user
 db_repl_password: db_repl_password
+
+# postgres config options
 postgresql_global_config_options:
   - option: wal_level
     value: 'replica'
@@ -13,16 +26,29 @@ postgresql_global_config_options:
   - option: max_wal_senders
     value: '10'
   - option: archive_command
-    value: 'cp %p /oracle/pg_data/archive/%f'
+    value: 'cp %p {{ postgres_archive_path }}'
   - option: log_replication_commands
     value: 'on'
   - option: log_file_mode
     value: '0640'
   - option: log_filename
-    value: 'postgres.log'
+    value: '{{ postgres_log_file }}'
   - option: wal_log_hints
     value: 'on'
   - option: logging_collector
     value: 'on'
   - option: log_directory
-    value: '/var/log/postgresql/'
+    value: '{{ postgres_log_path }}'
+
+# git repository with bot project
+repo: 'https://github.com/ctrl-kitty/pt-devops.git'
+git_branch: 'docker'
+
+# telegram token
+token: ''
+
+# ssh config
+rm_host: '{{ db_master_host }}'
+rm_port: '22'
+rm_user: 'tester'
+rm_password: 'Tt123456'
