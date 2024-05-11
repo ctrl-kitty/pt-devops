@@ -1,8 +1,12 @@
 [bot_server]
 host01 ansible_host=192.168.194.129 ansible_user=user ansible_password=Uu123456
-[db_server]
+[db]
 host02 ansible_host=192.168.194.130 ansible_user=user ansible_password=Uu123456
-[db_repl_server]
+[db_repl]
 host03 ansible_host=192.168.194.131 ansible_user=user ansible_password=Uu123456
 [debug]
 host04 ansible_host=192.168.194.133 ansible_user=user ansible_password=Uu123456
+[debug2]
+host05 ansible_host=192.168.194.134 ansible_user=user ansible_password=Uu123456
+[debug3]
+host06 ansible_host=192.168.194.136 ansible_user=user ansible_password=Uu123456

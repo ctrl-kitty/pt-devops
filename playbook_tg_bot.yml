@@ -26,6 +26,15 @@
     - name: "Create postgres_repl data directory"
       shell: "mkdir -p {{ postgres_archive_path }};chown postgres:postgres {{ postgres_archive_path }}"
       become: true
+
+    - name: "Create postgres_logs data directory"
+      shell: "mkdir -p {{ postgres_log_path }};chown postgres:postgres {{ postgres_log_path }}"
+      become: true
+
+    - name: "Add rm user to postgres group(for reading logs)"
+      shell: "usermod -aG postgres {{ rm_user }}"
+      become: true
+
     - name: "Find out if PostgreSQL is initialized"
       ansible.builtin.stat:
         path: "{{ postgres_conf_path }}/pg_hba.conf"
@@ -108,7 +117,6 @@
         create: true
       become: yes
       become_user: postgres
-      notify: restart postgres
     - name: Configure global settings.
       lineinfile:
         dest: "{{ postgres_conf_path }}/postgresql.conf"
@@ -119,6 +127,7 @@
       with_items: "{{ postgresql_master_config_options }}"
       become: yes
       become_user: postgres
+      notify: restart postgres
   handlers:
     - name: restart postgres
       service: name=postgresql state=restarted
@@ -164,7 +173,7 @@
       become: true
 
     - name: "Create base backup"
-      shell: "export PGPASSWORD='{{ db_repl_password }}' && pg_basebackup -P -R -X stream -D /var/lib/postgresql/14/main -h '{{ db_master_host }}' -U '{{ db_repl_user }}'"
+      shell: "export PGPASSWORD='{{ db_repl_password }}' && pg_basebackup -P -R -X stream -D /var/lib/postgresql/14/main -h {{ db_master_host }} -U {{ db_repl_user }}"
       become: yes
       become_user: postgres
 
@@ -177,15 +186,16 @@
   vars_files:
     - vars.yml
   environment:
-    DB_HOST: {{ db_master_host }}
-    DB_PORT: 5432
-    DB_USER: {{ db_mater_user }}
-    DB_PASSWORD: {{ db_password }}
-    DB_DATABASE: {{ db_name }}
-    RM_HOST: {{ rm_host }}
-    RM_PORT: {{ rm_port }}
-    RM_USER: {{ rm_user }}
-    RM_PASSWORD: { rm_password }
+    TOKEN: "{{ token }}"
+    DB_HOST: "{{ db_master_host }}"
+    DB_PORT: "5432"
+    DB_USER: "{{ db_mater_user }}"
+    DB_PASSWORD: "{{ db_password }}"
+    DB_DATABASE: "{{ db_name }}"
+    RM_HOST: "{{ rm_host }}"
+    RM_PORT: "{{ rm_port }}"
+    RM_USER: "{{ rm_user }}"
+    RM_PASSWORD: "{{ rm_password }}"
   pre_tasks:
     - name: "Install packages"
       apt: "name={{ item }} state=present"
@@ -200,7 +210,10 @@
         repo: "{{ repo }}"
         dest: ~/repo
         version: "{{ git_branch }}"
-    - name: "Install requirements.txt"
       become: true
+    - name: "Install requirements.txt"
       pip:
         requirements: "~/repo/bot/requirements.txt"
+      become: true
+    - name: "Run bot"
+      shell: "python3 ~/repo/bot/bot.py"
