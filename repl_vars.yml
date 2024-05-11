@@ -1,3 +1,0 @@
-db_master_host: 192.168.194.133
-db_repl_user: db_repl_user
-db_repl_password: db_repl_password
