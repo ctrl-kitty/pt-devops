@@ -220,7 +220,7 @@ async def process_phone_write(message: Message, state: FSMContext):
         logger.info("User %s want to write phones: %s", message.from_user.id, phones)
         out = "Добавляю в бд:\n\n"
         for i, phone in enumerate(phones):
-            write_message = await add_email_if_not_exist(phone)
+            write_message = await add_phone_if_not_exist(phone)
             out += f"{i + 1}. {phone} | Статус записи: {write_message}\n"
         await message.answer(out)
     else:
