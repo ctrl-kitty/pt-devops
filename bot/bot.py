@@ -16,6 +16,7 @@ from aiogram.filters import CommandStart, Command, CommandObject
 from aiogram.types import Message
 import time
 
+
 def create_db_connection():
     logger.info("Creating database connection")
     host = os.getenv('DB_HOST')
@@ -32,7 +33,6 @@ def create_db_connection():
     return connection
 
 
-
 logger = logging.getLogger(__name__)
 while 1:
     try:
@@ -43,7 +43,6 @@ while 1:
         continue
     break
 TOKEN = os.getenv('TOKEN')
-chat_id = os.getenv('CHAT_ID')
 
 dp = Dispatcher()
 search_router = Router()
@@ -53,7 +52,8 @@ postgres_router = Router()
 
 
 class EmailTextForm(StatesGroup):
-    email = State()
+    emailInput = State()
+    emailWrite = State()
 
 
 class PhoneTextForm(StatesGroup):
@@ -135,10 +135,10 @@ async def execute_sql(sql: str, commit=False):
 async def find_email(message: Message, state: FSMContext):
     logger.info("Got email search request from %s", message.from_user.id)
     await message.answer("Введите текст для поиска email-адресов:")
-    await state.set_state(EmailTextForm.email)
+    await state.set_state(EmailTextForm.emailInput)
 
 
-@search_router.message(EmailTextForm.email)
+@search_router.message(EmailTextForm.emailInput)
 async def process_email_search(message: Message, state: FSMContext):
     text = message.text
     logger.info("Got email reply from %s. Text: %s", message.from_user.id, text)
@@ -147,12 +147,34 @@ async def process_email_search(message: Message, state: FSMContext):
         logger.debug("Found emails: %s from user %s", emails, message.from_user.id)
         out = "Найденные email-адреса:\n"
         for i, email in enumerate(emails):
+            # write_message = await add_email_if_not_exist(email)
+            # out += f"{i + 1}. {email} | Статус записи: {write_message}\n"
+            out += f"{i + 1}. {email}\n"
+        await state.set_data({"emails": emails})
+        await message.answer(out)
+        await message.answer("Хотите записать найденные адреса в базу данных? (Да/Нет)")
+        await state.set_state(EmailTextForm.emailWrite)
+    else:
+        logger.debug("Not found emails from user %s", message.from_user.id)
+        await message.answer("Email-адреса не найдены.")
+        await state.clear()
+
+
+@search_router.message(EmailTextForm.emailWrite)
+async def process_email_write(message: Message, state: FSMContext):
+    text = message.text
+    logger.info("Got email-write reply from %s. Text: %s", message.from_user.id, text)
+    if text.lower() == "да":
+        emails = (await state.get_data())["emails"]
+        logger.info("User %s want to write emails: %s", message.from_user.id, emails)
+        out = "Добавляю в бд:\n\n"
+        for i, email in enumerate(emails):
             write_message = await add_email_if_not_exist(email)
             out += f"{i + 1}. {email} | Статус записи: {write_message}\n"
         await message.answer(out)
     else:
-        logger.debug("Not found emails from user %s", message.from_user.id)
-        await message.answer("Email-адреса не найдены.")
+        logger.info("User %s don't want to write emails", message.from_user.id)
+        await message.answer("Хорошо, данные не будут добавлены в базу данных")
     await state.clear()
 
 
