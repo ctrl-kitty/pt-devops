@@ -57,7 +57,9 @@ class EmailTextForm(StatesGroup):
 
 
 class PhoneTextForm(StatesGroup):
-    number = State()
+    numberInput = State()
+    numberWrite = State()
+
 
 
 class PasswordTextForm(StatesGroup):
@@ -182,10 +184,10 @@ async def process_email_write(message: Message, state: FSMContext):
 async def find_phone_number(message: Message, state: FSMContext):
     logger.info("Got phone search request from %s", message.from_user.id)
     await message.answer("Введите текст для поиска номеров телефонов:")
-    await state.set_state(PhoneTextForm.number)
+    await state.set_state(PhoneTextForm.numberInput)
 
 
-@search_router.message(PhoneTextForm.number)
+@search_router.message(PhoneTextForm.numberInput)
 async def process_phone_number_search(message: Message, state: FSMContext):
     text = message.text
     logger.info("Got phone reply from %s. Text: %s", message.from_user.id, text)
@@ -193,14 +195,38 @@ async def process_phone_number_search(message: Message, state: FSMContext):
     if phone_numbers:
         logger.debug("Found numbers: %s from user %s", phone_numbers, message.from_user.id)
         out = "Найденные номера телефонов:\n"
+        formatted_phone_numbers = []
         for i, phone in enumerate(phone_numbers):
             formatted_phone = "".join(phone).replace("+7", "8")
-            write_message = await add_phone_if_not_exist(formatted_phone)
-            out += f"{i + 1}. {formatted_phone} | Статус записи: {write_message}\n"
+            # write_message = await add_phone_if_not_exist(formatted_phone)
+            # out += f"{i + 1}. {formatted_phone} | Статус записи: {write_message}\n"
+            formatted_phone_numbers.append(formatted_phone)
+            out += f"{i + 1}. {formatted_phone}"
+        await state.set_data({"phones": formatted_phone_numbers})
         await message.answer(out)
+        await message.answer("Хотите записать найденныеномера телефонов в базу данных? (Да/Нет)")
+        await state.set_state(PhoneTextForm.numberWrite)
     else:
         logger.debug("Not found numbers from user %s", message.from_user.id)
         await message.answer("Номера телефонов не найдены.")
+    await state.clear()
+
+
+@search_router.message(PhoneTextForm.numberWrite)
+async def process_phone_write(message: Message, state: FSMContext):
+    text = message.text
+    logger.info("Got phone-write reply from %s. Text: %s", message.from_user.id, text)
+    if text.lower() == "да":
+        phones = (await state.get_data())["phones"]
+        logger.info("User %s want to write phones: %s", message.from_user.id, phones)
+        out = "Добавляю в бд:\n\n"
+        for i, phone in enumerate(phones):
+            write_message = await add_email_if_not_exist(phone)
+            out += f"{i + 1}. {phone} | Статус записи: {write_message}\n"
+        await message.answer(out)
+    else:
+        logger.info("User %s don't want to write phones", message.from_user.id)
+        await message.answer("Хорошо, данные не будут добавлены в базу данных")
     await state.clear()
 
 
@@ -310,21 +336,30 @@ async def get_services(message: Message):
 async def get_repl_logs(message: Message):
     data = await connect_and_execute("cat /var/log/postgres/postgres.log")
     out = await find_only_repl_log(data)
-    await message.answer(out)
+    if out:
+        await message.answer(out)
+    else:
+        await message.answer("Ничего не найдено")
 
 
 @postgres_router.message(Command("get_emails"))
 async def get_emails(message: Message):
     data = await execute_sql("select * from email;")
     out = await pretty_select(data)
-    await message.answer(out)
+    if out:
+        await message.answer(out)
+    else:
+        await message.answer("Ничего не найдено")
 
 
 @postgres_router.message(Command("get_phone_numbers"))
 async def get_phone_numbers(message: Message):
     data = await execute_sql("select * from phone;")
     out = await pretty_select(data)
-    await message.answer(out)
+    if out:
+        await message.answer(out)
+    else:
+        await message.answer("Ничего не найдено")
 
 
 async def main() -> None:
