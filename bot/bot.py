@@ -201,10 +201,10 @@ async def process_phone_number_search(message: Message, state: FSMContext):
             # write_message = await add_phone_if_not_exist(formatted_phone)
             # out += f"{i + 1}. {formatted_phone} | Статус записи: {write_message}\n"
             formatted_phone_numbers.append(formatted_phone)
-            out += f"{i + 1}. {formatted_phone}"
+            out += f"{i + 1}. {formatted_phone}\n"
         await state.set_data({"phones": formatted_phone_numbers})
         await message.answer(out)
-        await message.answer("Хотите записать найденныеномера телефонов в базу данных? (Да/Нет)")
+        await message.answer("Хотите записать найденные номера телефонов в базу данных? (Да/Нет)")
         await state.set_state(PhoneTextForm.numberWrite)
     else:
         logger.debug("Not found numbers from user %s", message.from_user.id)
