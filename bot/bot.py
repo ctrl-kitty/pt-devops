@@ -209,7 +209,6 @@ async def process_phone_number_search(message: Message, state: FSMContext):
     else:
         logger.debug("Not found numbers from user %s", message.from_user.id)
         await message.answer("Номера телефонов не найдены.")
-    await state.clear()
 
 
 @search_router.message(PhoneTextForm.numberWrite)
